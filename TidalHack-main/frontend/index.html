@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Airport Map</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Load React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- 3. Load Babel to transpile JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 4. Embed our styles directly -->
+    <style>
+        /* Use Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Add a subtle transition for layout shifts */
+        .map-container, .sidebar-container {
+            transition: all 0.5s ease-in-out;
+        }
+
+        /* Custom scrollbar for search results */
+        .search-results::-webkit-scrollbar {
+            width: 6px;
+        }
+        .search-results::-webkit-scrollbar-thumb {
+            background-color: #9ca3af; /* gray-400 */
+            border-radius: 3px;
+        }
+        .search-results::-webkit-scrollbar-track {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+    </style>
+
+</head>
+<body class="bg-gray-100 h-full flex flex-col antialiased">
+    
+    <!-- This is where our React app will be rendered -->
+    <div id="root" class="h-full"></div>
+
+    <!-- 5. Embed our React (JSX) code directly -->
+    <script type="text/babel">
+        // --- Comprehensive Airport Database ---
+        const ALL_AIRPORTS = [
+            // Northeast Region
+            { id: 1, code: "BOS", name: "Logan International Airport", location: "Boston, MA", region: "Northeast" },
+            { id: 2, code: "JFK", name: "John F. Kennedy International Airport", location: "New York, NY", region: "Northeast" },
+            { id: 3, code: "LGA", name: "LaGuardia Airport", location: "New York, NY", region: "Northeast" },
+            { id: 4, code: "EWR", name: "Newark Liberty International Airport", location: "Newark, NJ", region: "Northeast" },
+            { id: 5, code: "PHL", name: "Philadelphia International Airport", location: "Philadelphia, PA", region: "Northeast" },
+            { id: 6, code: "BWI", name: "Baltimore/Washington International Airport", location: "Baltimore, MD", region: "Northeast" },
+            { id: 7, code: "IAD", name: "Washington Dulles International Airport", location: "Washington, DC", region: "Northeast" },
+            { id: 8, code: "DCA", name: "Ronald Reagan Washington National Airport", location: "Washington, DC", region: "Northeast" },
+            { id: 9, code: "PWM", name: "Portland International Jetport", location: "Portland, ME", region: "Northeast" },
+            { id: 10, code: "BTV", name: "Burlington International Airport", location: "Burlington, VT", region: "Northeast" },
+            { id: 11, code: "ALB", name: "Albany International Airport", location: "Albany, NY", region: "Northeast" },
+            { id: 12, code: "SYR", name: "Syracuse Hancock International Airport", location: "Syracuse, NY", region: "Northeast" },
+            { id: 13, code: "BDL", name: "Bradley International Airport", location: "Hartford, CT", region: "Northeast" },
+            { id: 14, code: "PVD", name: "T.F. Green Airport", location: "Providence, RI", region: "Northeast" },
+            { id: 15, code: "MHT", name: "Manchester-Boston Regional Airport", location: "Manchester, NH", region: "Northeast" },
+            { id: 16, code: "ROC", name: "Greater Rochester International Airport", location: "Rochester, NY", region: "Northeast" },
+            { id: 17, code: "BGR", name: "Bangor International Airport", location: "Bangor, ME", region: "Northeast" },
+
+            // Pacific Coast Region
+            { id: 18, code: "LAX", name: "Los Angeles International Airport", location: "Los Angeles, CA", region: "PacificCoast" },
+            { id: 19, code: "SEA", name: "Seattle-Tacoma International Airport", location: "Seattle, WA", region: "PacificCoast" },
+            { id: 20, code: "SFO", name: "San Francisco International Airport", location: "San Francisco, CA", region: "PacificCoast" },
+            { id: 21, code: "SAN", name: "San Diego International Airport", location: "San Diego, CA", region: "PacificCoast" },
+            { id: 22, code: "LAS", name: "Harry Reid International Airport", location: "Las Vegas, NV", region: "PacificCoast" },
+            { id: 23, code: "PDX", name: "Portland International Airport", location: "Portland, OR", region: "PacificCoast" },
+            { id: 24, code: "SNA", name: "John Wayne Airport", location: "Santa Ana, CA", region: "PacificCoast" },
+            { id: 25, code: "SJC", name: "San Jose International Airport", location: "San Jose, CA", region: "PacificCoast" },
+            { id: 26, code: "SMF", name: "Sacramento International Airport", location: "Sacramento, CA", region: "PacificCoast" },
+            { id: 27, code: "BUR", name: "Hollywood Burbank Airport", location: "Burbank, CA", region: "PacificCoast" },
+            { id: 28, code: "OAK", name: "Oakland International Airport", location: "Oakland, CA", region: "PacificCoast" },
+            { id: 29, code: "BFL", name: "Bakersfield Municipal Airport", location: "Bakersfield, CA", region: "PacificCoast" },
+            { id: 30, code: "EUG", name: "Eugene Airport", location: "Eugene, OR", region: "PacificCoast" },
+            { id: 31, code: "RDM", name: "Redmond Municipal Airport", location: "Redmond, OR", region: "PacificCoast" },
+            { id: 32, code: "SPD", name: "Spokane International Airport", location: "Spokane, WA", region: "PacificCoast" },
+            { id: 33, code: "VGT", name: "North Las Vegas Airport", location: "Las Vegas, NV", region: "PacificCoast" },
+            { id: 34, code: "SBA", name: "Santa Barbara Municipal Airport", location: "Santa Barbara, CA", region: "PacificCoast" },
+            { id: 35, code: "MRY", name: "Monterey Regional Airport", location: "Monterey, CA", region: "PacificCoast" },
+            { id: 36, code: "ACV", name: "Arcata-Eureka Airport", location: "Arcata, CA", region: "PacificCoast" },
+            { id: 37, code: "RNO", name: "Reno-Tahoe International Airport", location: "Reno, NV", region: "PacificCoast" },
+            { id: 38, code: "BOI", name: "Boise Airport", location: "Boise, ID", region: "PacificCoast" },
+            { id: 39, code: "GEG", name: "Spokane International Airport", location: "Spokane, WA", region: "PacificCoast" },
+
+            // Rocky Mountains Region
+            { id: 40, code: "DEN", name: "Denver International Airport", location: "Denver, CO", region: "RockyMountains" },
+            { id: 41, code: "SLC", name: "Salt Lake City International Airport", location: "Salt Lake City, UT", region: "RockyMountains" },
+            { id: 42, code: "ABQ", name: "Albuquerque International Sunport", location: "Albuquerque, NM", region: "RockyMountains" },
+            { id: 43, code: "PHX", name: "Phoenix Sky Harbor International Airport", location: "Phoenix, AZ", region: "RockyMountains" },
+            { id: 44, code: "BOI", name: "Boise Airport", location: "Boise, ID", region: "RockyMountains" },
+            { id: 45, code: "BZN", name: "Bozeman Yellowstone International Airport", location: "Bozeman, MT", region: "RockyMountains" },
+            { id: 46, code: "BIL", name: "Billings Logan International Airport", location: "Billings, MT", region: "RockyMountains" },
+            { id: 47, code: "COS", name: "Colorado Springs Airport", location: "Colorado Springs, CO", region: "RockyMountains" },
+            { id: 48, code: "BUF", name: "Buffalo Niagara International Airport", location: "Buffalo, NY", region: "RockyMountains" },
+            { id: 49, code: "ASE", name: "Aspen/Pitkin County Airport", location: "Aspen, CO", region: "RockyMountains" },
+            { id: 50, code: "TUS", name: "Tucson International Airport", location: "Tucson, AZ", region: "RockyMountains" },
+            { id: 51, code: "FAT", name: "Fresno Yosemite International Airport", location: "Fresno, CA", region: "RockyMountains" },
+
+            // Central Plains Region
+            { id: 52, code: "ORD", name: "O'Hare International Airport", location: "Chicago, IL", region: "CentralPlains" },
+            { id: 53, code: "OKC", name: "Will Rogers World Airport", location: "Oklahoma City, OK", region: "CentralPlains" },
+            { id: 54, code: "DFW", name: "Dallas/Fort Worth International Airport", location: "Dallas, TX", region: "CentralPlains" },
+            { id: 55, code: "IAH", name: "George Bush Intercontinental Airport", location: "Houston, TX", region: "CentralPlains" },
+            { id: 56, code: "MSP", name: "Minneapolis-Saint Paul International Airport", location: "Minneapolis, MN", region: "CentralPlains" },
+            { id: 57, code: "STL", name: "St. Louis Lambert International Airport", location: "St. Louis, MO", region: "CentralPlains" },
+            { id: 58, code: "MCI", name: "Kansas City International Airport", location: "Kansas City, MO", region: "CentralPlains" },
+            { id: 59, code: "ICT", name: "Wichita Dwight D. Eisenhower National Airport", location: "Wichita, KS", region: "CentralPlains" },
+            { id: 60, code: "AUS", name: "Austin-Bergstrom International Airport", location: "Austin, TX", region: "CentralPlains" },
+            { id: 61, code: "SAT", name: "San Antonio International Airport", location: "San Antonio, TX", region: "CentralPlains" },
+            { id: 62, code: "HOU", name: "William P. Hobby Airport", location: "Houston, TX", region: "CentralPlains" },
+            { id: 63, code: "DAL", name: "Dallas Love Field", location: "Dallas, TX", region: "CentralPlains" },
+            { id: 64, code: "LNK", name: "Lincoln Airport", location: "Lincoln, NE", region: "CentralPlains" },
+            { id: 65, code: "OMA", name: "Eppley Airfield", location: "Omaha, NE", region: "CentralPlains" },
+            { id: 66, code: "DSM", name: "Des Moines International Airport", location: "Des Moines, IA", region: "CentralPlains" },
+            { id: 67, code: "FAR", name: "Hector International Airport", location: "Fargo, ND", region: "CentralPlains" },
+            { id: 68, code: "DTW", name: "Detroit Metropolitan Wayne County Airport", location: "Detroit, MI", region: "CentralPlains" },
+            { id: 69, code: "CLE", name: "Cleveland Hopkins International Airport", location: "Cleveland, OH", region: "CentralPlains" },
+            { id: 70, code: "CVG", name: "Cincinnati/Northern Kentucky International Airport", location: "Cincinnati, OH", region: "CentralPlains" },
+            { id: 71, code: "IND", name: "Indianapolis International Airport", location: "Indianapolis, IN", region: "CentralPlains" },
+            { id: 72, code: "MKE", name: "Milwaukee Mitchell International Airport", location: "Milwaukee, WI", region: "CentralPlains" },
+            { id: 73, code: "GRR", name: "Gerald R. Ford International Airport", location: "Grand Rapids, MI", region: "CentralPlains" },
+            { id: 74, code: "CMH", name: "John Glenn Columbus International Airport", location: "Columbus, OH", region: "CentralPlains" },
+            { id: 75, code: "DAY", name: "Dayton International Airport", location: "Dayton, OH", region: "CentralPlains" },
+            { id: 76, code: "TOL", name: "Toledo Express Airport", location: "Toledo, OH", region: "CentralPlains" },
+            { id: 77, code: "FWA", name: "Fort Wayne International Airport", location: "Fort Wayne, IN", region: "CentralPlains" },
+
+            // Southeast Region
+            { id: 78, code: "ATL", name: "Hartsfield-Jackson Atlanta International Airport", location: "Atlanta, GA", region: "Southeast" },
+            { id: 79, code: "MIA", name: "Miami International Airport", location: "Miami, FL", region: "Southeast" },
+            { id: 80, code: "CLT", name: "Charlotte Douglas International Airport", location: "Charlotte, NC", region: "Southeast" },
+            { id: 81, code: "MCO", name: "Orlando International Airport", location: "Orlando, FL", region: "Southeast" },
+            { id: 82, code: "TPA", name: "Tampa International Airport", location: "Tampa, FL", region: "Southeast" },
+            { id: 83, code: "FLL", name: "Fort Lauderdale-Hollywood International Airport", location: "Fort Lauderdale, FL", region: "Southeast" },
+            { id: 84, code: "BNA", name: "Nashville International Airport", location: "Nashville, TN", region: "Southeast" },
+            { id: 85, code: "RDU", name: "Raleigh-Durham International Airport", location: "Raleigh, NC", region: "Southeast" },
+            { id: 86, code: "JAX", name: "Jacksonville International Airport", location: "Jacksonville, FL", region: "Southeast" },
+            { id: 87, code: "RSW", name: "Southwest Florida International Airport", location: "Fort Myers, FL", region: "Southeast" },
+            { id: 88, code: "MSY", name: "Louis Armstrong New Orleans International Airport", location: "New Orleans, LA", region: "Southeast" },
+            { id: 89, code: "SAV", name: "Savannah/Hilton Head International Airport", location: "Savannah, GA", region: "Southeast" },
+            { id: 90, code: "CHS", name: "Charleston International Airport", location: "Charleston, SC", region: "Southeast" },
+            { id: 91, code: "GSP", name: "Greenville-Spartanburg International Airport", location: "Greer, SC", region: "Southeast" },
+            { id: 92, code: "CHA", name: "Chattanooga Metropolitan Airport", location: "Chattanooga, TN", region: "Southeast" },
+            { id: 93, code: "TLH", name: "Tallahassee International Airport", location: "Tallahassee, FL", region: "Southeast" },
+            { id: 94, code: "GNV", name: "Gainesville Regional Airport", location: "Gainesville, FL", region: "Southeast" },
+            { id: 95, code: "MKY", name: "Marco Island Executive Airport", location: "Marco Island, FL", region: "Southeast" },
+            { id: 96, code: "PNS", name: "Pensacola International Airport", location: "Pensacola, FL", region: "Southeast" },
+            { id: 97, code: "RIC", name: "Richmond International Airport", location: "Richmond, VA", region: "Southeast" },
+            { id: 98, code: "ORF", name: "Norfolk International Airport", location: "Norfolk, VA", region: "Southeast" },
+            { id: 99, code: "GSO", name: "Piedmont Triad International Airport", location: "Greensboro, NC", region: "Southeast" },
+            { id: 100, code: "AVL", name: "Asheville Regional Airport", location: "Asheville, NC", region: "Southeast" },
+            { id: 101, code: "CAE", name: "Columbia Metropolitan Airport", location: "Columbia, SC", region: "Southeast" },
+            { id: 102, code: "MYR", name: "Myrtle Beach International Airport", location: "Myrtle Beach, SC", region: "Southeast" },
+            { id: 103, code: "ILM", name: "Wilmington International Airport", location: "Wilmington, NC", region: "Southeast" },
+            { id: 104, code: "FAY", name: "Fayetteville Regional Airport", location: "Fayetteville, NC", region: "Southeast" },
+            { id: 105, code: "OAJ", name: "Albert J Ellis Airport", location: "Jacksonville, NC", region: "Southeast" }
+        ];
+
+        // Note: We don't need "import React" because it's loaded globally via the <script> tag in index.html
+    const { useState, useMemo, useEffect, useRef } = React;
+    // Google Maps JS API key (provided)
+    const GOOGLE_MAPS_API_KEY = 'AIzaSyDQi_JrwA-HFSBgKrTx8mmbh08tM447b_s';
+
+        // --- Components ---
+
+        /**
+         * 1. SearchBar Component
+         * Handles filtering airports and selecting one.
+         */
+        function SearchBar({ onAirportSelect, selectedAirport }) {
+            const [query, setQuery] = useState("");
+            const [isFocused, setIsFocused] = useState(false);
+
+            // Filter airports based on the search query
+            const filteredAirports = useMemo(() => {
+                if (!query) {
+                    return ALL_AIRPORTS.slice(0, 20); // Show first 20 airports when no query
+                }
+                const lowerQuery = query.toLowerCase();
+                return ALL_AIRPORTS.filter(airport =>
+                    airport.name.toLowerCase().includes(lowerQuery) ||
+                    airport.code.toLowerCase().includes(lowerQuery) ||
+                    airport.location.toLowerCase().includes(lowerQuery) ||
+                    (airport.region && airport.region.toLowerCase().includes(lowerQuery))
+                ).sort((a, b) => {
+                    // Sort by relevance - exact matches first
+                    const aExact = a.code.toLowerCase() === lowerQuery || 
+                                   a.location.toLowerCase().includes(lowerQuery);
+                    const bExact = b.code.toLowerCase() === lowerQuery || 
+                                   b.location.toLowerCase().includes(lowerQuery);
+                    
+                    if (aExact && !bExact) return -1;
+                    if (!aExact && bExact) return 1;
+                    return 0;
+                });
+            }, [query]);
+
+            // Handle selecting an airport from the results
+            const handleSelect = (airport) => {
+                setQuery(airport.name);
+                setIsFocused(false);
+                onAirportSelect(airport);
+            };
+            
+            // Clear selection
+            const clearSelection = () => {
+                setQuery("");
+                onAirportSelect(null);
+            };
+
+            return (
+                <div className="relative w-full max-w-lg mx-auto z-20">
+                    <div className="flex items-center bg-white rounded-lg shadow-md overflow-hidden">
+                        {/* Search Icon */}
+                        <svg className="h-5 w-5 text-gray-400 mx-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setTimeout(() => setIsFocused(false), 150)} // Delay blur to allow click
+                            placeholder="Search for an airport (e.g., JFK, Los Angeles)"
+                            className="w-full py-3 pr-4 text-gray-700 placeholder-gray-400 focus:outline-none"
+                        />
+                        
+                        {/* Clear Button */}
+                        {selectedAirport && (
+                            <button
+                                onClick={clearSelection}
+                                className="p-2 text-gray-500 hover:text-gray-800 focus:outline-none mr-2"
+                                title="Clear selection"
+                            >
+                                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Search Results Dropdown */}
+                    {isFocused && filteredAirports.length > 0 && (
+                        <div className="absolute w-full mt-1 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 search-results max-h-60 overflow-y-auto">
+                            <ul>
+                                {filteredAirports.map(airport => (
+                                    <li
+                                        key={airport.id}
+                                        onClick={() => handleSelect(airport)}
+                                        className="px-4 py-3 cursor-pointer hover:bg-gray-100"
+                                    >
+                                        <div className="font-medium text-gray-800">{airport.code} - {airport.name}</div>
+                                        <div className="text-sm text-gray-500">{airport.location}</div>
+                                        {airport.region && (
+                                            <div className="text-xs text-blue-600 font-medium mt-1">
+                                                {airport.region.replace(/([A-Z])/g, ' $1').trim()}
+                                            </div>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        /**
+         * 2. Map Component (Placeholder)
+         * Simulates the US map and the zoomed-in airport view.
+         */
+        function AirportMap({ selectedAirport }) {
+            const mapRef = useRef(null);
+            const mapInstance = useRef(null);
+            const markerRef = useRef(null);
+
+            // Create coordinates lookup from ALL_AIRPORTS data
+            const AIRPORT_COORDS = {};
+            ALL_AIRPORTS.forEach(airport => {
+                // Extract coordinates from location string or use known coordinates
+                const coords = getAirportCoordinates(airport.code, airport.location);
+                if (coords) {
+                    AIRPORT_COORDS[airport.code] = coords;
+                }
+            });
+
+            // Helper function to get coordinates for airports
+            function getAirportCoordinates(code, location) {
+                // Known coordinates for major airports
+                const knownCoords = {
+                    'BOS': { lat: 42.3656, lng: -71.0096 },
+                    'JFK': { lat: 40.6413, lng: -73.7781 },
+                    'LGA': { lat: 40.7769, lng: -73.8740 },
+                    'EWR': { lat: 40.6895, lng: -74.1745 },
+                    'PHL': { lat: 39.8729, lng: -75.2437 },
+                    'BWI': { lat: 39.1774, lng: -76.6684 },
+                    'IAD': { lat: 38.9531, lng: -77.4565 },
+                    'DCA': { lat: 38.8512, lng: -77.0402 },
+                    'PWM': { lat: 43.6462, lng: -70.3093 },
+                    'BTV': { lat: 44.4719, lng: -73.1533 },
+                    'ALB': { lat: 42.7483, lng: -73.8017 },
+                    'SYR': { lat: 43.1112, lng: -76.1063 },
+                    'BDL': { lat: 41.9389, lng: -72.6832 },
+                    'PVD': { lat: 41.7238, lng: -71.4282 },
+                    'MHT': { lat: 42.9326, lng: -71.4357 },
+                    'ROC': { lat: 43.1189, lng: -77.6724 },
+                    'BGR': { lat: 44.8074, lng: -68.8281 },
+                    'LAX': { lat: 33.9416, lng: -118.4085 },
+                    'SEA': { lat: 47.4502, lng: -122.3088 },
+                    'SFO': { lat: 37.6213, lng: -122.3790 },
+                    'SAN': { lat: 32.7338, lng: -117.1933 },
+                    'LAS': { lat: 36.0840, lng: -115.1537 },
+                    'PDX': { lat: 45.5898, lng: -122.5951 },
+                    'SNA': { lat: 33.6757, lng: -117.8682 },
+                    'SJC': { lat: 37.3626, lng: -121.9290 },
+                    'SMF': { lat: 38.6954, lng: -121.5908 },
+                    'BUR': { lat: 34.2006, lng: -118.3587 },
+                    'OAK': { lat: 37.8044, lng: -122.2712 },
+                    'BFL': { lat: 35.4339, lng: -119.0568 },
+                    'EUG': { lat: 44.1246, lng: -123.2120 },
+                    'RDM': { lat: 44.2541, lng: -121.1500 },
+                    'SPD': { lat: 47.6199, lng: -117.5348 },
+                    'VGT': { lat: 36.2107, lng: -115.1944 },
+                    'SBA': { lat: 34.4262, lng: -119.8404 },
+                    'MRY': { lat: 36.5870, lng: -121.8429 },
+                    'ACV': { lat: 40.9781, lng: -124.1086 },
+                    'RNO': { lat: 39.4996, lng: -119.7681 },
+                    'BOI': { lat: 43.5644, lng: -116.2228 },
+                    'GEG': { lat: 47.6199, lng: -117.5348 },
+                    'DEN': { lat: 39.8561, lng: -104.6737 },
+                    'SLC': { lat: 40.7899, lng: -111.9791 },
+                    'ABQ': { lat: 35.0402, lng: -106.6091 },
+                    'PHX': { lat: 33.4342, lng: -112.0116 },
+                    'BZN': { lat: 45.7776, lng: -111.1528 },
+                    'BIL': { lat: 45.8077, lng: -108.5429 },
+                    'COS': { lat: 38.8058, lng: -104.7008 },
+                    'BUF': { lat: 42.9405, lng: -78.7322 },
+                    'ASE': { lat: 39.2232, lng: -106.8689 },
+                    'TUS': { lat: 32.1161, lng: -110.9411 },
+                    'FAT': { lat: 36.7762, lng: -119.7181 },
+                    'ORD': { lat: 41.9786, lng: -87.9048 },
+                    'OKC': { lat: 35.3931, lng: -97.6007 },
+                    'DFW': { lat: 32.8998, lng: -97.0403 },
+                    'IAH': { lat: 29.9902, lng: -95.3368 },
+                    'MSP': { lat: 44.8848, lng: -93.2223 },
+                    'STL': { lat: 38.7487, lng: -90.3708 },
+                    'MCI': { lat: 39.2976, lng: -94.7139 },
+                    'ICT': { lat: 37.6499, lng: -97.4331 },
+                    'AUS': { lat: 30.1945, lng: -97.6699 },
+                    'SAT': { lat: 29.5337, lng: -98.4698 },
+                    'HOU': { lat: 29.6454, lng: -95.2789 },
+                    'DAL': { lat: 32.8471, lng: -96.8518 },
+                    'LNK': { lat: 40.8510, lng: -96.7592 },
+                    'OMA': { lat: 41.3025, lng: -95.8942 },
+                    'DSM': { lat: 41.5340, lng: -93.6631 },
+                    'FAR': { lat: 46.9207, lng: -96.8158 },
+                    'DTW': { lat: 42.2162, lng: -83.3554 },
+                    'CLE': { lat: 41.4117, lng: -81.8498 },
+                    'CVG': { lat: 39.0488, lng: -84.6678 },
+                    'IND': { lat: 39.7173, lng: -86.2944 },
+                    'MKE': { lat: 42.9472, lng: -87.8966 },
+                    'GRR': { lat: 42.8808, lng: -85.5228 },
+                    'CMH': { lat: 39.9980, lng: -82.8919 },
+                    'DAY': { lat: 39.9024, lng: -84.2194 },
+                    'TOL': { lat: 41.5868, lng: -83.8078 },
+                    'FWA': { lat: 40.9785, lng: -85.1951 },
+                    'ATL': { lat: 33.6407, lng: -84.4277 },
+                    'MIA': { lat: 25.7959, lng: -80.2906 },
+                    'CLT': { lat: 35.2144, lng: -80.9473 },
+                    'MCO': { lat: 28.4312, lng: -81.3081 },
+                    'TPA': { lat: 27.9755, lng: -82.5332 },
+                    'FLL': { lat: 26.0726, lng: -80.1527 },
+                    'BNA': { lat: 36.1245, lng: -86.6782 },
+                    'RDU': { lat: 35.8776, lng: -78.7875 },
+                    'JAX': { lat: 30.4941, lng: -81.6879 },
+                    'RSW': { lat: 26.5362, lng: -81.7552 },
+                    'MSY': { lat: 29.9934, lng: -90.2581 },
+                    'SAV': { lat: 32.1276, lng: -81.2021 },
+                    'CHS': { lat: 32.8986, lng: -80.0405 },
+                    'GSP': { lat: 34.8957, lng: -82.2189 },
+                    'CHA': { lat: 35.0353, lng: -85.2038 },
+                    'TLH': { lat: 30.3965, lng: -84.3503 },
+                    'GNV': { lat: 29.6901, lng: -82.2718 },
+                    'MKY': { lat: 25.9954, lng: -81.6726 },
+                    'PNS': { lat: 30.4734, lng: -87.1866 },
+                    'RIC': { lat: 37.5052, lng: -77.3197 },
+                    'ORF': { lat: 36.8945, lng: -76.2012 },
+                    'GSO': { lat: 36.0978, lng: -79.9373 },
+                    'AVL': { lat: 35.4362, lng: -82.5418 },
+                    'CAE': { lat: 33.9388, lng: -81.1195 },
+                    'MYR': { lat: 33.6797, lng: -78.9283 },
+                    'ILM': { lat: 34.2706, lng: -77.9026 },
+                    'FAY': { lat: 34.9912, lng: -78.8803 },
+                    'OAJ': { lat: 34.8292, lng: -77.6121 }
+                };
+                
+                return knownCoords[code] || null;
+            }
+
+            // Helper: inject Google Maps script
+            const loadGoogleMaps = (callback) => {
+                if (window.google && window.google.maps) {
+                    callback();
+                    return;
+                }
+                const id = 'google-maps-script';
+                if (document.getElementById(id)) {
+                    // already loading; wait for it
+                    const check = setInterval(() => {
+                        if (window.google && window.google.maps) {
+                            clearInterval(check);
+                            callback();
+                        }
+                    }, 100);
+                    return;
+                }
+                const script = document.createElement('script');
+                script.id = id;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
+                script.async = true;
+                script.defer = true;
+                script.onload = () => callback();
+                script.onerror = () => console.error('Failed to load Google Maps script');
+                document.head.appendChild(script);
+            };
+
+            useEffect(() => {
+                // Initialize map once
+                loadGoogleMaps(() => {
+                    if (!mapRef.current) return;
+                    if (!mapInstance.current) {
+                        mapInstance.current = new window.google.maps.Map(mapRef.current, {
+                            center: { lat: 39.8283, lng: -98.5795 }, // center of continental US
+                            zoom: 4,
+                        });
+                    }
+                });
+                // cleanup not necessary for the script tag
+            }, []);
+
+            useEffect(() => {
+                // When selectedAirport changes, pan and add a marker (if we have coords)
+                if (!selectedAirport || !mapInstance.current) return;
+                const coords = AIRPORT_COORDS[selectedAirport.code];
+                if (!coords) {
+                    console.warn(`No coordinates found for airport: ${selectedAirport.code}`);
+                    return; // no coords for this airport
+                }
+
+                console.log(`Zooming to ${selectedAirport.code} at coordinates:`, coords);
+                // Pan/zoom to airport
+                mapInstance.current.panTo(coords);
+                mapInstance.current.setZoom(10);
+
+                // Add or move marker
+                if (markerRef.current) {
+                    markerRef.current.setPosition(coords);
+                } else {
+                    markerRef.current = new window.google.maps.Marker({
+                        position: coords,
+                        map: mapInstance.current,
+                        title: selectedAirport.name,
+                    });
+                }
+            }, [selectedAirport]);
+
+            return (
+                <div className="relative w-full h-full bg-gray-300 rounded-lg shadow-inner overflow-hidden border-2 border-gray-400">
+                    <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '360px' }} />
+                    {!selectedAirport && (
+                        <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm rounded-md px-3 py-1 text-sm font-medium text-gray-800 shadow-md">
+                            Continental US map
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        /**
+         * 3. Sidebar Component
+         * Shows flight risk assessment from XGBoost model.
+         */
+        function Sidebar({ airport }) {
+            const [flightRisk, setFlightRisk] = useState(null);
+            const [loading, setLoading] = useState(false);
+
+            useEffect(() => {
+                if (!airport) return;
+                
+                // Fetch flight risk data from backend
+                setLoading(true);
+                fetch(`http://localhost:8080/api/flight-risk?iata=${airport.code}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        setFlightRisk(data);
+                        setLoading(false);
+                    })
+                    .catch(err => {
+                        console.error('Error fetching flight risk:', err);
+                        setFlightRisk({ error: true });
+                        setLoading(false);
+                    });
+            }, [airport]);
+
+            if (!airport) return null;
+
+            // Helper to get risk color class
+            const getRiskClass = (score) => {
+                if (score < 20) return 'bg-gradient-to-r from-green-500 to-emerald-500';
+                if (score < 60) return 'bg-gradient-to-r from-yellow-400 to-orange-500';
+                if (score < 80) return 'bg-gradient-to-r from-orange-500 to-red-500';
+                return 'bg-gradient-to-r from-red-600 to-red-800';
+            };
+
+            return (
+                <div className="w-full h-full bg-white rounded-lg shadow-lg p-6 overflow-y-auto">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-1">{airport.code}</h2>
+                    <h3 className="text-lg font-medium text-gray-600 mb-4">{airport.name}</h3>
+                    <p className="text-md text-gray-500 mb-6">{airport.location}</p>
+                    
+                    {/* Flight Risk Assessment */}
+                    {loading && (
+                        <div className="text-center py-8">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                            <p className="mt-4 text-gray-600">Analyzing flight risk...</p>
+                        </div>
+                    )}
+
+                    {!loading && flightRisk && !flightRisk.error && (
+                        <div className="space-y-4">
+                            <div className={`rounded-xl p-6 text-white shadow-lg ${getRiskClass(flightRisk.risk_score)}`}>
+                                <div className="text-sm font-medium mb-2">🛫 AI FLIGHT RISK SCORE</div>
+                                <div className="text-5xl font-bold mb-1">{flightRisk.risk_score?.toFixed(1)}</div>
+                                <div className="text-lg opacity-90">{flightRisk.risk_category}</div>
+                            </div>
+
+                            {/* Assessment */}
+                            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                                <p className="text-sm text-gray-700 italic">{flightRisk.interpretation?.description}</p>
+                            </div>
+
+                            {/* Model Info */}
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">🧠 AI Model Details</p>
+                                <p className="text-sm text-gray-700"><strong>Regional Model:</strong> {flightRisk.zone}</p>
+                                <p className="text-sm text-gray-700"><strong>Model Type:</strong> XGBoost Gradient Boosting</p>
+                                <p className="text-sm text-gray-700"><strong>Data Source:</strong> NOAA METAR Real-Time</p>
+                            </div>
+
+                            {/* METAR Weather Data */}
+                            {flightRisk.weather_data && (
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-3">🌤️ Current Weather (METAR)</p>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">🌡️ Temperature:</span>
+                                            <span className="font-semibold">{flightRisk.weather_data.temperature_c?.toFixed(1)}°C</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">💨 Wind:</span>
+                                            <span className="font-semibold">{flightRisk.weather_data.wind_speed_kts?.toFixed(1)} kts @ {flightRisk.weather_data.wind_direction?.toFixed(0)}°</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">👁️ Visibility:</span>
+                                            <span className="font-semibold">{flightRisk.weather_data.visibility_km?.toFixed(1)} km</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">☁️ Ceiling:</span>
+                                            <span className="font-semibold">{flightRisk.weather_data.ceiling_ft?.toFixed(0)} ft</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">💧 Humidity:</span>
+                                            <span className="font-semibold">{flightRisk.weather_data.humidity?.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">🌬️ Gusts:</span>
+                                            <span className="font-semibold">{flightRisk.weather_data.gust?.toFixed(1)} kts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {!loading && flightRisk && flightRisk.error && (
+                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                            <p className="text-sm text-yellow-800">
+                                ⚠️ Unable to fetch flight risk data. Please ensure the backend server is running.
+                            </p>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        /**
+         * 4. Main App Component
+         * Manages state and layout.
+         */
+        function App() {
+            const [selectedAirport, setSelectedAirport] = useState(null);
+
+            return (
+                <div className="flex flex-col h-full p-4 md:p-8">
+                    {/* Top Section: Search Bar */}
+                    <header className="flex-shrink-0 mb-6">
+                        <h1 className="text-3xl font-bold text-center text-gray-800 mb-4">Airport Data Visualizer</h1>
+                        <SearchBar 
+                            onAirportSelect={setSelectedAirport}
+                            selectedAirport={selectedAirport} 
+                        />
+                    </header>
+
+                    {/* Bottom Section: Map and Sidebar */}
+                    <main className="flex-grow flex items-stretch overflow-hidden">
+                        {/* This is the core layout logic.
+                          - If no airport is selected, map is centered and full width.
+                          - If an airport is selected, layout splits into 2/3 map and 1/3 sidebar.
+                        */}
+                        <div className={`map-container ${selectedAirport ? 'w-full md:w-2/3' : 'w-full'} h-full pr-0 md:pr-${selectedAirport ? '4' : '0'}`}>
+                            <AirportMap selectedAirport={selectedAirport} />
+                        </div>
+                        
+                        <div className={`sidebar-container ${selectedAirport ? 'w-full mt-4 md:mt-0 md:w-1/3' : 'w-0'} h-full overflow-hidden`}>
+                           {selectedAirport && <Sidebar airport={selectedAirport} />}
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        // --- 5. Render the App ---
+        const container = document.getElementById('root');
+
+        // Check if a root has already been created for this container.
+        // This prevents errors in environments that might re-run the script.
+        if (container && !container._reactRootContainer) {
+            const root = ReactDOM.createRoot(container);
+            root.render(<App />);
+        }
+    </script>
+
+</body>
+</html>
+
