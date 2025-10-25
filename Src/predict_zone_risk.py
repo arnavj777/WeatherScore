@@ -18,7 +18,10 @@ ZONES = {
 
 def load_zone_model(zone_name):
     """Load model files for a specific zone"""
-    model_dir = 'models/zones'
+    # Get the project root directory (parent of Src/)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(current_dir)
+    model_dir = os.path.join(project_root, 'models', 'zones')
     
     model_path = os.path.join(model_dir, f'{zone_name}_model.pkl')
     scaler_path = os.path.join(model_dir, f'{zone_name}_scaler.pkl')

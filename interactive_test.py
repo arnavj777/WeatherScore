@@ -4,6 +4,7 @@ Enter an airport code and weather conditions to get a flight risk score
 """
 from Src.predict_zone_risk import predict_zone_risk, interpret_risk_score, ZONES
 from Src.load_airports import load_airport_mapping, get_all_airports_by_zone
+from Src.fetch_metar import fetch_metar_data, airport_code_to_icao
 
 # Load airports from Excel file
 AIRPORT_ZONES = load_airport_mapping()
@@ -153,8 +154,25 @@ def main():
     
     print(f"\n✓ {airport_code} is in the {zone} zone")
     
-    # Get weather conditions
-    weather = get_weather_input()
+    # Ask if user wants to fetch real METAR data
+    print("\n" + "="*70)
+    print("WEATHER DATA SOURCE")
+    print("="*70)
+    fetch_metar = input("\nFetch current weather from NOAA METAR? (y/n) [default: n]: ").strip().lower()
+    
+    if fetch_metar == 'y' or fetch_metar == 'yes':
+        print("\nFetching current METAR data...")
+        icao_code = airport_code_to_icao(airport_code)
+        weather = fetch_metar_data(icao_code)
+        
+        if weather is None:
+            print("\n❌ Failed to fetch METAR data. Please enter weather manually.")
+            weather = get_weather_input()
+        else:
+            print("\n✅ Successfully fetched METAR data!")
+    else:
+        # Get weather conditions manually
+        weather = get_weather_input()
     
     # Display weather summary
     print("\n" + "="*70)

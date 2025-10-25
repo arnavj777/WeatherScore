@@ -4,10 +4,13 @@ A machine learning system that uses XGBoost to predict flight risk scores (0-100
 
 ## Features
 
+- **Real-Time METAR Integration**: Fetch current weather data directly from NOAA Aviation Weather API
 - **Automated Data Processing**: Parses METAR format weather data and combines it with airport observations
 - **Machine Learning Model**: XGBoost-based regression model for accurate risk prediction
 - **0-100 Risk Scoring**: Simple scoring system where 100 = maximum flight risk
+- **Multi-Zone Support**: 5 regional models covering all US airports
 - **Comprehensive Feature Engineering**: Uses multiple weather parameters including visibility, ceiling, wind speed, and more
+- **34+ Airport Support**: Loads airports from Excel file for easy expansion
 
 ## Installation
 
@@ -168,9 +171,29 @@ Available zones: `Northeast`, `PacificCoast`, `RockyMountains`, `CentralPlains`,
 
 ### Interactive Testing
 
-**Option 1: Interactive Interface**
+**Option 1: Interactive Interface with Real-Time METAR**
 
-To test your own weather data with an interactive interface:
+To test with real-time weather data or custom values:
+
+```bash
+python interactive_test.py
+```
+
+Features:
+- **Real-time METAR fetching** from NOAA API
+- Support for 34+ airports from Excel file
+- Automatic zone detection and model selection
+- Manual weather entry option
+- Detailed risk interpretation
+
+**Quick Example:**
+```
+Enter Airport Code: AUS
+Fetch current weather from NOAA METAR? (y/n): y
+Fetches current weather automatically!
+```
+
+**Option 2: Legacy Interactive Interface**
 
 ```bash
 python Src\test_model.py
