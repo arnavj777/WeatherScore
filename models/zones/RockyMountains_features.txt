@@ -1,0 +1,16 @@
+temperature_c
+dewpoint_c
+wind_direction
+wind_speed_kts
+visibility_km
+ceiling_ft
+sea_level_pressure_mb
+gust
+relh
+temp_spread
+ceiling_vis_ratio
+pressure_change
+humidity
+hour
+is_night
+departure_hour

@@ -1,0 +1,17 @@
+temperature_c_aus
+dewpoint_c_aus
+wind_direction_aus
+wind_speed_kts_aus
+visibility_km_aus
+ceiling_ft_aus
+sea_level_pressure_mb_aus
+gust
+relh
+temp_spread
+gust_factor
+ceiling_vis_ratio
+pressure_change
+humidity
+hour
+month
+is_night
