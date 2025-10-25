@@ -26,7 +26,9 @@ echo ""
 
 # Start backend server
 echo "🔧 Starting Flask backend server..."
-cd source
+cd /Users/yogansh.agarwal/Documents/GitHub/WeatherScore
+source venv/bin/activate
+cd TidalHack-main/source
 python3 main.py &
 BACKEND_PID=$!
 
@@ -35,7 +37,7 @@ sleep 2
 
 # Start frontend server
 echo "🎨 Starting React frontend server..."
-cd ../frontend
+cd /Users/yogansh.agarwal/Documents/GitHub/WeatherScore/TidalHack-main/frontend
 npm run dev &
 FRONTEND_PID=$!
 
