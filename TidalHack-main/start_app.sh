@@ -28,6 +28,7 @@ echo ""
 echo "🔧 Starting Flask backend server..."
 cd /Users/yogansh.agarwal/Documents/GitHub/WeatherScore
 source venv/bin/activate
+export DYLD_LIBRARY_PATH="/usr/local/opt/libomp/lib:$DYLD_LIBRARY_PATH"
 cd TidalHack-main/source
 python3 main.py &
 BACKEND_PID=$!
